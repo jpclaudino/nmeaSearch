@@ -7,6 +7,7 @@ import pynmea2
 import datetime
 import gpxpy
 import gpxpy.gpx
+from fileUtil import read_in_chunks
 
 GPXFile = "NMEA.gpx"
 LOGFile = "NMEA.log"
@@ -104,15 +105,6 @@ def findMessageType(offset,pieceOfFile):
         except:
                 return 0
         return 0
-
-def read_in_chunks(file_object, chunk_size=1024000):
-    """Lazy function (generator) to read a file piece by piece.
-    Default chunk size: 1k."""
-    while True:
-        data = file_object.read(chunk_size)
-        if not data:
-            break
-        yield data
 
 def gpsFinder(basepath):
     try:
