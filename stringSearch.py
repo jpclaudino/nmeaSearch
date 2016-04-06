@@ -1,3 +1,5 @@
+__author__ = 'spi'
+
 from haversine import haversine
 from fileUtil import read_in_chunks
 from math import radians, cos, sin, asin, sqrt, degrees
@@ -5,8 +7,9 @@ import binascii
 import sys
 
 AVG_EARTH_RADIUS = 6371
+degreeSign = b'º'
+pointSign = b'.'
 
-__author__ = 'spi'
 
 def haversine_getLatitude(point1, d):
     """ Calculates the latitude of a point distant "d" kilometes from the reference point, passed as a parameter.
@@ -48,6 +51,11 @@ def haversine_getLongitude(point1, d):
 
     return degrees(lng2)
 
+class CoordinateNotFound(Exception):
+    def __init__(self, value):
+        self.value = value
+    def __str__(self):
+        return repr(self.value)
 
 def getLimits(point,distance):
     northLimit = haversine_getLatitude(point,distance)
@@ -80,6 +88,17 @@ def getUTFDegrees(degrees):
         utfDegreesList.append(degree.encode('utf-16-le'))
     return utfDegreesList
 
+def getMessageASCII(offset,piece,asciiDegreesList,limits):
+    northDegree = asciiDegreesList(0)
+    southDegree = asciiDegreesList(1)
+    westDegree = asciiDegreesList(2)
+    eastDegree = asciiDegreesList(3)
+
+def getMessageUTF(offset,piece,asciiDegreesList,limits):
+    northDegree = asciiDegreesList(0)
+    southDegree = asciiDegreesList(1)
+    westDegree = asciiDegreesList(2)
+    eastDegree = asciiDegreesList(3)
 
 def searchCoordinates(coordinate,distance,piece):
     limits = getLimits((coordinate.latitude, coordinate.longitude),distance)
@@ -87,6 +106,17 @@ def searchCoordinates(coordinate,distance,piece):
     stringDegreesFromLimits = getStringDegrees(degreesFromLimits)
     asciiDegreesList = getASCIIDegrees(stringDegreesFromLimits)
     utfDegreesList = getUTFDegrees(stringDegreesFromLimits)
+    offset = 0
+    messageListASCII = []
+    messageListUTF = []
+    while offset < len(piece):
+        try:
+            messageListASCII.append(getMessageASCII(offset,piece,asciiDegreesList,limits))
+            messageListUTF.append(getMessageUTF(offset,piece,utfDegreesList,limits))
+        except:
+            pass
+        offset += 1
+    return messageListASCII,messageListUTF
 
 def stringSearch(coordinate,distance,basepath):
     try:
