@@ -93,6 +93,20 @@ def getMessageASCII(offset,piece,asciiDegreesList,limits):
     southDegree = asciiDegreesList(1)
     westDegree = asciiDegreesList(2)
     eastDegree = asciiDegreesList(3)
+    tempOffset = offset
+    if(checkDegrees(northDegree, piece, tempOffset)) :
+        print(offset)
+        print(tempOffset)
+    elif (checkDegrees(southDegree, piece, tempOffset)):
+        print(offset)
+        print(tempOffset)
+
+def checkDegrees(degree, piece, tempOffset):
+    for byteDegree in degree:
+        if byteDegree != piece[tempOffset]:
+            return False
+        tempOffset += 1
+    return True
 
 def getMessageUTF(offset,piece,asciiDegreesList,limits):
     northDegree = asciiDegreesList(0)
