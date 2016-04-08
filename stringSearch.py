@@ -7,8 +7,11 @@ import binascii
 import sys
 
 AVG_EARTH_RADIUS = 6371
-degreeSign = b'º'
+DECIMALSIZE = 50
+BYTERANGE = 100
+#degreeSign = b'º'
 pointSign = b'.'
+numbers = b'0123456789'
 
 
 def haversine_getLatitude(point1, d):
@@ -89,19 +92,46 @@ def getUTFDegrees(degrees):
     return utfDegreesList
 
 def getMessageASCII(offset,piece,asciiDegreesList,limits):
-    northDegree = asciiDegreesList(0)
-    southDegree = asciiDegreesList(1)
-    westDegree = asciiDegreesList(2)
-    eastDegree = asciiDegreesList(3)
-    tempOffset = offset
-    if(checkDegrees(northDegree, piece, tempOffset)) :
+    northDegree = asciiDegreesList[0]
+    southDegree = asciiDegreesList[1]
+    westDegree = asciiDegreesList[2]
+    eastDegree = asciiDegreesList[3]
+    if(checkDegrees(northDegree, piece, offset)) :
+        getDecimalDegreeCoordinate(northDegree,offset,piece)
+    elif (checkDegrees(southDegree, piece, offset)):
         print(offset)
-        print(tempOffset)
-    elif (checkDegrees(southDegree, piece, tempOffset)):
-        print(offset)
-        print(tempOffset)
 
-def checkDegrees(degree, piece, tempOffset):
+def getDecimalDegreeCoordinate(degree,offset,piece):
+    coordinateByteArray = []
+    tempOffset = offset
+    for byteDegree in degree:
+        coordinateByteArray.append(piece[tempOffset])
+        tempOffset += 1
+    if( piece[tempOffset] == pointSign[0] ):
+        coordinateByteArray.append(piece[tempOffset])
+        count = 0
+        while( count < DECIMALSIZE ):
+            tempOffset += 1
+            if( isNumber(piece[tempOffset]) ):
+                coordinateByteArray.append(piece[tempOffset])
+                count += 1
+            else:
+                if (count == 0):
+                    raise CoordinateNotFound("Message without decimal part")
+                else:
+                    break
+    else:
+        raise CoordinateNotFound("Message without . sign")
+    return coordinateByteArray
+
+def isNumber(byte):
+    for number in numbers:
+        if (byte == number):
+            return True
+    return False
+
+def checkDegrees(degree, piece, offset):
+    tempOffset = offset
     for byteDegree in degree:
         if byteDegree != piece[tempOffset]:
             return False
@@ -109,13 +139,13 @@ def checkDegrees(degree, piece, tempOffset):
     return True
 
 def getMessageUTF(offset,piece,asciiDegreesList,limits):
-    northDegree = asciiDegreesList(0)
-    southDegree = asciiDegreesList(1)
-    westDegree = asciiDegreesList(2)
-    eastDegree = asciiDegreesList(3)
+    northDegree = asciiDegreesList[0]
+    southDegree = asciiDegreesList[1]
+    westDegree = asciiDegreesList[2]
+    eastDegree = asciiDegreesList[3]
 
 def searchCoordinates(coordinate,distance,piece):
-    limits = getLimits((coordinate.latitude, coordinate.longitude),distance)
+    limits = getLimits(coordinate,distance)
     degreesFromLimits = getDegreesFromLimits(limits)
     stringDegreesFromLimits = getStringDegrees(degreesFromLimits)
     asciiDegreesList = getASCIIDegrees(stringDegreesFromLimits)
@@ -154,3 +184,5 @@ def stringSearch(coordinate,distance,basepath):
 #binascii.hexlify(asciiDegreesList[0])
 #binascii.hexlify(utfDegreesList[0])
 #sys.getsizeof(utfDegreesList[0])
+
+stringSearch((-15.817431, -47.930934),10,"F:/temp/coordenadas.img")
