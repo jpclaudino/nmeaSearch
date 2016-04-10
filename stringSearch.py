@@ -97,9 +97,37 @@ def getMessageASCII(offset,piece,asciiDegreesList,limits):
     westDegree = asciiDegreesList[2]
     eastDegree = asciiDegreesList[3]
     if(checkDegrees(northDegree, piece, offset)) :
-        getDecimalDegreeCoordinate(northDegree,offset,piece)
+        latitudeDegree = northDegree
     elif (checkDegrees(southDegree, piece, offset)):
-        print(offset)
+        latitudeDegree = southDegree
+    else:
+        raise CoordinateNotFound("Degree not found.")
+    latitude = getDecimalDegreeCoordinate(latitudeDegree,offset,piece)
+    offsetNewPiece = 0
+    newPiece = getNewPiece(offset, piece)
+    while (offsetNewPiece < len(newPiece)):
+        longitude = None
+        try:
+            if(checkDegrees(westDegree, newPiece, offsetNewPiece)) :
+                longitudeDegree = westDegree
+            elif (checkDegrees(eastDegree, newPiece, offsetNewPiece)):
+                longitudeDegree = eastDegree
+            else:
+                raise CoordinateNotFound("Degree not found.")
+            longitude = getDecimalDegreeCoordinate(longitudeDegree,offsetNewPiece,newPiece)
+        except:
+            pass
+        offsetNewPiece += 1
+    if (longitude == None):
+        raise CoordinateNotFound("Longitude not found.")
+    else:
+        return latitude,longitude,newPiece
+
+
+def getNewPiece(offset, piece):
+    if(offset < BYTERANGE):
+        return piece[0:offset + BYTERANGE]
+    return piece[offset - BYTERANGE:offset + BYTERANGE]
 
 def getDecimalDegreeCoordinate(degree,offset,piece):
     coordinateByteArray = []
@@ -185,4 +213,4 @@ def stringSearch(coordinate,distance,basepath):
 #binascii.hexlify(utfDegreesList[0])
 #sys.getsizeof(utfDegreesList[0])
 
-stringSearch((-15.817431, -47.930934),10,"F:/temp/coordenadas.img")
+stringSearch((-15.817431, -47.930934),10,"C:/Users/jpcla_000/Desktop/coordenadas.img")
