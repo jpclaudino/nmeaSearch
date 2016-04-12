@@ -5,6 +5,7 @@ from fileUtil import *
 from math import radians, cos, sin, asin, sqrt, degrees
 import binascii
 import sys
+import datetime
 
 
 AVG_EARTH_RADIUS = 6371
@@ -134,10 +135,14 @@ def getMessage(offset,piece,degreeList,limits,encoding):
     if (longitude == None):
         raise CoordinateNotFound("Longitude not found.")
     else:
-        print(latitude.__str__())
-        print(longitude.__str__())
+        print(intListToString(latitude,encoding) + "  " +intListToString(longitude,encoding))
         return latitude,longitude,newPiece
 
+def intListToString(bytelist,encoding):
+    frame = bytearray()
+    for intByte in bytelist:
+        frame.append(intByte)
+    return frame.decode(encoding)
 
 def getNewPiece(offset, piece):
     if(offset < BYTERANGE):
@@ -201,42 +206,45 @@ def isNumber(byte):
             return True
     return False
 
-def searchCoordinates(coordinate,distance,piece):
-    limits = getLimits(coordinate,distance)
-    degreesFromLimits = getDegreesFromLimits(limits)
-    stringDegreesFromLimits = getStringDegrees(degreesFromLimits)
-    asciiDegreesList = getASCIIDegrees(stringDegreesFromLimits)
-    utfDegreesList = getUTFDegrees(stringDegreesFromLimits)
+def searchCoordinates(piece,limits,asciiDegreesList,utfDegreesList):
     offset = 0
     messageListASCII = []
     messageListUTF = []
     while offset < len(piece):
-        try:
+        if(isNumber(piece[offset]) or piece[offset] == negativeSign[0] ):
             try:
-                messageListASCII.append(getMessage(offset,piece,asciiDegreesList,limits,ASCII))
+                try:
+                    messageListASCII.append(getMessage(offset,piece,asciiDegreesList,limits,ASCII))
+                except:
+                    messageListUTF.append(getMessage(offset,piece,utfDegreesList,limits,UTF16))
             except:
-                messageListUTF.append(getMessage(offset,piece,utfDegreesList,limits,UTF16))
-        except:
-            pass
+                pass
         offset += 1
     return messageListASCII,messageListUTF
 
 def stringSearch(coordinate,distance,basepath):
+    print("Starting GPS strings search!")
+    print(datetime.datetime.now())
     try:
         fin = open(basepath, "rb")
     except:
         print("File not Found")
         exit(0)
     listUTF, listASCII = [],[]
+    limits = getLimits(coordinate,distance)
+    degreesFromLimits = getDegreesFromLimits(limits)
+    stringDegreesFromLimits = getStringDegrees(degreesFromLimits)
+    asciiDegreesList = getASCIIDegrees(stringDegreesFromLimits)
+    utfDegreesList = getUTFDegrees(stringDegreesFromLimits)
     for piece in read_in_chunks(fin):
-        lASCII,lUTF = searchCoordinates(coordinate,distance,piece)
+        lASCII,lUTF = searchCoordinates(piece,limits,asciiDegreesList,utfDegreesList)
         listUTF = listUTF + lUTF
         listASCII = listASCII + lASCII
     for message in listASCII+listUTF:
         print(message.__str__())
-
     fin.close()
-
+    print(datetime.datetime.now())
+    print("GPS sentences write to gpx and log files ")
 
 #print("-15.817431, -47.930934")
 #print(haversine_getLatitude((-15.817431, -47.930934), 0.5).__str__() + ",-47.930934")
@@ -250,4 +258,6 @@ def stringSearch(coordinate,distance,basepath):
 #binascii.hexlify(utfDegreesList[0])
 #sys.getsizeof(utfDegreesList[0])
 
-stringSearch((-15.817431, -47.930934),100,"F:/Mestrado/Dumps/z2 - Waze Sem Desligar/1.raw")
+#stringSearch((-15.817431, -47.930934),100,"F:/Mestrado/Dumps/z2 - Waze Sem Desligar/1.raw")
+#stringSearch((-15.817431, -47.930934),100,"F:/Mestrado/Dumps/Tablet -  Google Maps - Desligando Location/1.raw")
+stringSearch((-15.817431, -47.930934),100,"F:/temp/coordenadasUTF.img")

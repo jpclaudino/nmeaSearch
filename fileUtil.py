@@ -1,6 +1,7 @@
 __author__ = 'jpcla_000'
 
 pointSign = b'.'
+negativeSign = b'-'
 numbers = b'0123456789'
 zeroSign = b'\x00'
 ASCII =  'ASCII'
