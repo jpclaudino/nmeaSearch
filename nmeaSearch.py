@@ -7,11 +7,9 @@ import pynmea2
 import datetime
 import gpxpy
 import gpxpy.gpx
-from fileUtil import read_in_chunks
+from fileUtil import *
 
-GPXFile = "NMEA.gpx"
-LOGFile = "NMEA.log"
-CoordinatesFile = "Coordinates .log"
+
 nmeaGPRMC_UTF16 = b'$\x00G\x00P\x00R\x00M\x00C\x00'
 nmeaGPGGA_UTF16 = b'$\x00G\x00P\x00G\x00G\x00A\x00'
 nmeaGPRMC_ASCII = b'$GPRMC'
@@ -136,72 +134,6 @@ def gpsFinder(basepath):
     foutGPX.close()
     foutLOG.close()
     foutCoordinates.close()
-
-def printMsg(wfile,msg,printSpeed):
-    try:
-
-        if printSpeed:
-            sentence = "\n"+ msg.__str__() + "     -    Speed in Km/h: "  + str(msg.spd_over_grnd * 1.852)
-            wfile.write(sentence.encode('utf-8'))
-        else:
-            sentence = "\n"+ msg.__str__()
-            wfile.write(sentence.encode('utf-8'))
-    except:
-        pass
-
-def buildLog(wfile,listGPGGA, listGPGGA_ASCII, listGPGGA_UTF16, listGPRMC, listGPRMC_ASCII, listGPRMC_UTF16):
-    countMessages(listGPGGA, listGPGGA_ASCII, listGPGGA_UTF16, listGPRMC, listGPRMC_ASCII, listGPRMC_UTF16, wfile)
-    for msg in listGPRMC:
-        printMsg(wfile,msg, True)
-    for msg in listGPGGA:
-        printMsg(wfile,msg, False)
-
-def filterList(list):
-    for msg in list:
-        if msg.is_valid: yield msg
-
-def countMessages(listGPGGA, listGPGGA_ASCII, listGPGGA_UTF16, listGPRMC, listGPRMC_ASCII, listGPRMC_UTF16, wfile):
-    validGPGGAMessages = list(filterList(listGPGGA))
-    validGPRMCMessages = list(filterList(listGPRMC))
-    wfile.write(("Number of Unicode GPRMC messages: " + str(len(listGPRMC_UTF16))).encode('utf-8'))
-    wfile.write(("\nNumber of ASCII GPRMC messages: " + str(len(listGPRMC_ASCII))).encode('utf-8'))
-    wfile.write(("\nTotal Number of GPRMC messages: " + str(len(listGPRMC))).encode('utf-8'))
-    wfile.write(("\nTotal Number of Valid GPRMC messages: " + str(len(validGPRMCMessages))).encode('utf-8'))
-    wfile.write("\n*************************************".encode('utf-8'))
-    wfile.write(("\nNumber of Unicode GPGGA messages: " + str(len(listGPGGA_UTF16))).encode('utf-8'))
-    wfile.write(("\nNumber of ASCII GPGGA messages: " + str(len(listGPGGA_ASCII))).encode('utf-8'))
-    wfile.write(("\nTotal Number of GPGGA messages: " + str(len(listGPGGA))).encode('utf-8'))
-    wfile.write(("\nTotal Number of Valid GPGGA messages: " + str(len(validGPGGAMessages))).encode('utf-8'))
-    wfile.write("\n*************************************".encode('utf-8'))
-
-def buildGPX(wfile,listNMEAMessages):
-    gpx = gpxpy.gpx.GPX()
-    name = 1
-    for msg in listNMEAMessages:
-        if msg != None:
-            try:
-                if msg.latitude != None and msg.longitude != None and  msg.latitude != 0.0 and msg.longitude != 0.0:
-                    gpx_waypoint=gpxpy.gpx.GPXWaypoint(name=name, latitude=msg.latitude, longitude=msg.longitude)
-                    gpx.waypoints.append(gpx_waypoint)
-                    name += 1
-            except:
-                pass
-    wfile.write(gpx.to_xml().encode('utf-8'))
-
-def buildCoordinatesLog(wfile,listNMEAMessages):
-    sentence = "latitude,longitude"
-    wfile.write(sentence.encode('utf-8'))
-    for msg in listNMEAMessages:
-        if msg != None:
-            try:
-                if msg.latitude != None and msg.longitude != None and  msg.latitude != 0.0 and msg.longitude != 0.0:
-                    if msg.timestamp != None:
-                        sentence = "\n" + str(msg.latitude) + "," + str(msg.longitude) + "," + str(msg.timestamp)
-                    else:
-                        sentence = "\n" + str(msg.latitude) + "," + str(msg.longitude) + ",0"
-                    wfile.write(sentence.encode('utf-8'))
-            except:
-                pass
 
 def main(argv):
     print("Starting NMEA sentences recovery!")

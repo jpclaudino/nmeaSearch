@@ -1,5 +1,7 @@
 __author__ = 'spi'
 
+import os
+from argparse import ArgumentParser
 from haversine import haversine
 from fileUtil import *
 from math import radians, cos, sin, asin, sqrt, degrees
@@ -135,8 +137,8 @@ def getMessage(offset,piece,degreeList,limits,encoding):
     if (longitude == None):
         raise CoordinateNotFound("Longitude not found.")
     else:
-        print(intListToString(latitude,encoding) + "  " +intListToString(longitude,encoding))
-        return latitude,longitude,newPiece
+        print(intListToString(latitude,encoding) + "  " + intListToString(longitude,encoding))
+        return intListToString(latitude,encoding),intListToString(longitude,encoding),newPiece
 
 def intListToString(bytelist,encoding):
     frame = bytearray()
@@ -227,6 +229,8 @@ def stringSearch(coordinate,distance,basepath):
     print(datetime.datetime.now())
     try:
         fin = open(basepath, "rb")
+        foutGPX = open(basepath + "_" + StringGPXFile,'wb')
+        foutLOG = open(basepath + "_" + StringLOGFile,'wb')
     except:
         print("File not Found")
         exit(0)
@@ -240,11 +244,48 @@ def stringSearch(coordinate,distance,basepath):
         lASCII,lUTF = searchCoordinates(piece,limits,asciiDegreesList,utfDegreesList)
         listUTF = listUTF + lUTF
         listASCII = listASCII + lASCII
-    for message in listASCII+listUTF:
+    messages = listASCII+listUTF
+    for message in messages:
         print(message.__str__())
+    buildGPXfromCoordinatesList(foutGPX,messages)
+    buildLogFromCoordinatesList(foutLOG,messages)
     fin.close()
+    foutGPX.close()
+    foutLOG.close()
     print(datetime.datetime.now())
     print("GPS sentences write to gpx and log files ")
+
+def main(argv):
+    print("Starting GPS Data (coordinates in decimal degrees format) recovery!")
+    print(datetime.datetime.now())
+    # parser options
+    parser = ArgumentParser(description='GPS Data Recovery')
+    parser.add_argument(dest='infile', help="The argument needs to be a dump file.")
+    parser.add_argument('-d', '--distance', dest='distance', help="Distance in km")
+    parser.add_argument('-la', '--latitude',  dest='latitude', help="Latitude in decimal degrees")
+    parser.add_argument('-lo', '--longitude',  dest='longitude', help="Longitude in decimal degrees")
+    options = parser.parse_args()
+    # checks for the input file
+    if options.infile is None:
+        parser.print_help()
+        sys.exit(1)
+    if not os.path.exists(options.infile):
+        print('Error: "{0}" file is not found!'.format(options.infile))
+        sys.exit(1)
+    if not options.distance.isdigit():
+        print('Error: distance must be in km!'.format(options.infile))
+        sys.exit(1)
+    try:
+        coordinates = (float(options.latitude),float(options.longitude))
+    except:
+        print('Error: latitude and longitude must be in decimal degrees!'.format(options.infile))
+        sys.exit(1)
+    stringSearch(coordinates,int(options.distance),options.infile)
+    print(datetime.datetime.now())
+    print("Nmea sentences write to gpx and log files ")
+
+if __name__ == '__main__':
+    main(sys.argv[1:])
 
 #print("-15.817431, -47.930934")
 #print(haversine_getLatitude((-15.817431, -47.930934), 0.5).__str__() + ",-47.930934")
@@ -260,4 +301,6 @@ def stringSearch(coordinate,distance,basepath):
 
 #stringSearch((-15.817431, -47.930934),100,"F:/Mestrado/Dumps/z2 - Waze Sem Desligar/1.raw")
 #stringSearch((-15.817431, -47.930934),100,"F:/Mestrado/Dumps/Tablet -  Google Maps - Desligando Location/1.raw")
-stringSearch((-15.817431, -47.930934),100,"F:/temp/coordenadasUTF.img")
+#stringSearch((-15.817431, -47.930934),100,"D:/2016/15-34591-1-CELULAR-ROTA-GOOGLE-MAPS/UFED/Samsung GSM GT-I9300 Galaxy S III 2016_04_13 (001)/Physical Boot Loader (Recommended) 01/DumpData.bin")
+
+#stringSearch((-15.817431, -47.930934),100,"F:/gps/coordenadasUTF.img")
