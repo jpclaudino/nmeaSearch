@@ -231,6 +231,7 @@ def stringSearch(coordinate,distance,basepath):
         fin = open(basepath, "rb")
         foutGPX = open(basepath + "_" + StringGPXFile,'wb')
         foutLOG = open(basepath + "_" + StringLOGFile,'wb')
+        foutMemoryLOG = open(basepath + "_" + StringMemoryLOGFile,'wb')
     except:
         print("File not Found")
         exit(0)
@@ -249,9 +250,11 @@ def stringSearch(coordinate,distance,basepath):
         print(message.__str__())
     buildGPXfromCoordinatesList(foutGPX,messages)
     buildLogFromCoordinatesList(foutLOG,messages)
+    buildMemoryLogFromCoordinatesList(foutMemoryLOG,messages)
     fin.close()
     foutGPX.close()
     foutLOG.close()
+    foutMemoryLOG.close()
     print(datetime.datetime.now())
     print("GPS sentences write to gpx and log files ")
 

@@ -8,6 +8,7 @@ GPXFile = "NMEA.gpx"
 LOGFile = "NMEA.log"
 StringGPXFile = "StringCoordinates.gpx"
 StringLOGFile = "StringCoordinates.log"
+StringMemoryLOGFile = "StringCoordinatesMemory.log"
 CoordinatesFile = "Coordinates .log"
 
 pointSign = b'.'
@@ -49,6 +50,13 @@ def buildLogFromCoordinatesList(wfile,listMessages):
                 wfile.write(sentence.encode('utf-8'))
             except:
                 pass
+
+def buildMemoryLogFromCoordinatesList(wfile,listMessages):
+    for msg in listMessages:
+        try:
+            wfile.write(msg.__str__().encode('utf-8'))
+        except:
+            pass
 
 def buildGPX(wfile,listNMEAMessages):
     gpx = gpxpy.gpx.GPX()
