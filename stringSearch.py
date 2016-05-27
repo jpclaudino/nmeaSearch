@@ -66,8 +66,8 @@ class CoordinateNotFound(Exception):
 def getLimits(point,distance):
     northLimit = haversine_getLatitude(point,distance)
     southLimit = haversine_getLatitude(point,-distance)
-    westLimit = haversine_getLongitude(point,distance)
-    eastLimit = haversine_getLongitude(point,-distance)
+    eastLimit = haversine_getLongitude(point,distance)
+    westLimit = haversine_getLongitude(point,-distance)
     return northLimit,southLimit,eastLimit,westLimit
 
 def getDegreesFromLimits(limits):
