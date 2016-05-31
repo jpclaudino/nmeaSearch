@@ -63,6 +63,12 @@ class CoordinateNotFound(Exception):
     def __str__(self):
         return repr(self.value)
 
+class NotFloatCoordinate(Exception):
+    def __init__(self, value):
+        self.value = value
+    def __str__(self):
+        return repr(self.value)
+
 def getLimits(point,distance):
     northLimit = haversine_getLatitude(point,distance)
     southLimit = haversine_getLatitude(point,-distance)
@@ -116,11 +122,23 @@ def checkDegrees(degreeDownLimit,degreeUpLimit, piece, offset,encoding):
     except:
         raise CoordinateNotFound("Degree not found.")
 
+def checkLimits(stringLatitude,stringLongitude,limits):
+    try:
+        floatLatitude = float(stringLatitude)
+        floatLongitude = float(stringLongitude)
+        northLimit,southLimit,eastLimit,westLimit = limits
+        if( (floatLatitude < northLimit) and (floatLatitude > southLimit) and (floatLongitude < eastLimit) and (floatLongitude > westLimit) ):
+            return True
+        else:
+            return False
+    except:
+        return False
+
 def getMessage(offset,piece,degreeList,limits,encoding):
     northDegree = degreeList[0]
     southDegree = degreeList[1]
-    westDegree = degreeList[2]
-    eastDegree = degreeList[3]
+    eastDegree = degreeList[2]
+    westDegree = degreeList[3]
     latitudeDegree = checkDegrees(southDegree,northDegree, piece, offset,encoding)
     latitude = getDecimalDegreeCoordinate(latitudeDegree,offset,piece,encoding)
     offsetNewPiece = 0
@@ -137,8 +155,13 @@ def getMessage(offset,piece,degreeList,limits,encoding):
     if (longitude == None):
         raise CoordinateNotFound("Longitude not found.")
     else:
-        print(intListToString(latitude,encoding) + "  " + intListToString(longitude,encoding))
-        return intListToString(latitude,encoding),intListToString(longitude,encoding),newPiece
+        stringLatitude = intListToString(latitude,encoding)
+        stringLongitude = intListToString(longitude,encoding)
+        if(checkLimits(stringLatitude,stringLongitude,limits)):
+            print(stringLatitude + "  " + stringLongitude)
+            return stringLatitude,stringLongitude,newPiece
+        else:
+            raise NotFloatCoordinate("Latitude and longitude must be in decimal degrees")
 
 def intListToString(bytelist,encoding):
     frame = bytearray()
@@ -163,7 +186,6 @@ def getDecimalDegreeCoordinate(degree,offset,piece,encoding):
         getDecimalDegreeCoordinateUTF(coordinateByteArray, piece, tempOffset)
     return coordinateByteArray
 
-
 def getDecimalDegreeCoordinateASCII(coordinateByteArray, piece, tempOffset):
     if (piece[tempOffset] == pointSign[0]):
         coordinateByteArray.append(piece[tempOffset])
@@ -180,7 +202,6 @@ def getDecimalDegreeCoordinateASCII(coordinateByteArray, piece, tempOffset):
                     break
     else:
         raise CoordinateNotFound("Message without . sign")
-
 
 def getDecimalDegreeCoordinateUTF(coordinateByteArray, piece, tempOffset):
     if (piece[tempOffset] == pointSign[0] and piece[tempOffset + 1] == zeroSign[0]):
@@ -200,7 +221,6 @@ def getDecimalDegreeCoordinateUTF(coordinateByteArray, piece, tempOffset):
                     break
     else:
         raise CoordinateNotFound("Message without . sign")
-
 
 def isNumber(byte):
     for number in numbers:
