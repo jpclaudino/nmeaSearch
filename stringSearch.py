@@ -144,17 +144,19 @@ def getMessage(offset,piece,degreeList,limits,encoding):
     offsetNewPiece = 0
     newPiece = getNewPiece(offset, piece)
     longitude = None
+    longitudesList = []
     while (offsetNewPiece < len(newPiece)):
         try:
             longitudeDegree = checkDegrees(westDegree,eastDegree, newPiece, offsetNewPiece,encoding)
             longitude = getDecimalDegreeCoordinate(longitudeDegree,offsetNewPiece,newPiece,encoding)
-            break
+            longitudesList.append((longitude,abs((BYTERANGE/2)-offsetNewPiece)))
         except:
             pass
         offsetNewPiece += 1
-    if (longitude == None):
+    if not longitudesList:
         raise CoordinateNotFound("Longitude not found.")
     else:
+        longitude = getBestLongitude(longitudesList)
         stringLatitude = intListToString(latitude,encoding)
         stringLongitude = intListToString(longitude,encoding)
         if(checkLimits(stringLatitude,stringLongitude,limits)):
@@ -162,6 +164,16 @@ def getMessage(offset,piece,degreeList,limits,encoding):
             return stringLatitude,stringLongitude,newPiece
         else:
             raise NotFloatCoordinate("Latitude and longitude must be in decimal degrees")
+
+
+def getBestLongitude(longitudesList):
+    distance = BYTERANGE
+    minLong = None
+    for longitude in longitudesList:
+        if(longitude[1] < distance):
+            minLong =  longitude[0]
+            distance = longitude[1]
+    return minLong
 
 def intListToString(bytelist,encoding):
     frame = bytearray()
@@ -285,6 +297,7 @@ def main(argv):
     parser = ArgumentParser(description='GPS Data Recovery')
     parser.add_argument(dest='infile', help="The argument needs to be a dump file.")
     parser.add_argument('-d', '--distance', dest='distance', help="Distance in km")
+    parser.add_argument('-b', '--bytes', dest='bytes', help="bytes range")
     parser.add_argument('-la', '--latitude',  dest='latitude', help="Latitude in decimal degrees")
     parser.add_argument('-lo', '--longitude',  dest='longitude', help="Longitude in decimal degrees")
     options = parser.parse_args()
@@ -298,6 +311,11 @@ def main(argv):
     if not options.distance.isdigit():
         print('Error: distance must be in km!'.format(options.infile))
         sys.exit(1)
+    if not options.bytes.isdigit():
+        print('Error: bytes must be an integer!'.format(options.infile))
+        sys.exit(1)
+    else:
+        BYTERANGE = int(options.bytes)
     try:
         coordinates = (float(options.latitude),float(options.longitude))
     except:
