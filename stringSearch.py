@@ -149,7 +149,7 @@ def getMessage(offset,piece,degreeList,limits,encoding):
         try:
             longitudeDegree = checkDegrees(westDegree,eastDegree, newPiece, offsetNewPiece,encoding)
             longitude = getDecimalDegreeCoordinate(longitudeDegree,offsetNewPiece,newPiece,encoding)
-            longitudesList.append(longitude,abs(BYTERANGE-offsetNewPiece))
+            longitudesList.append((longitude,abs(BYTERANGE-offsetNewPiece)))
         except:
             pass
         offsetNewPiece += 1
